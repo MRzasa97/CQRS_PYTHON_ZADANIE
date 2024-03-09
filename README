@@ -46,3 +46,5 @@ response:
 'Report generation dispatched', 200
 
 The project has simple Unit tests to test API validation and handler test to check handler logic. It would be great to test more, but didn't have more time for this.
+
+Github action will run Build and test pipelines on push and pull request
