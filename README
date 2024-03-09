@@ -1,0 +1,48 @@
+Docker is requeired to run this project.
+
+make build or docker-compose build to build project
+make up or docker-compose up to start project
+make down or docker compose down to stop containers
+make test or docker-compose run --rm --no-deps --entrypoint=pytest api /tests/unit to run tests
+make logs to see last 50 lines of logs
+
+The project has 5 endpoints:
+
+/invoice POST is expecting json with "email" and "amount" fields
+{
+    "email": "test1@test.pl",
+    "amount": 24122
+}
+response:
+'Message dispatched', 201
+
+/invoice GET is expecting json with email and will return all data with the same email:
+{
+    "email": "test1@test.pl"
+}
+response:
+[
+    [
+        "test1@test.pl",
+        2137.0
+    ]
+]
+
+/invoice PUT is expecting json with "id" and "amount" field and will update the data with the same id as provided:
+{
+    "id" 2,
+    "amount": 24122
+}
+response:
+'Update dispatched', 201
+
+/invoice/<invoice_id> DELETE will delete the data with provided id
+response:
+'Delete dispatched', 200
+
+
+/report is expecting json with email field and will generate report with data of email user and send it to user (using mailhog as this is a test project)
+response:
+'Report generation dispatched', 200
+
+The project has simple Unit tests to test API validation and handler test to check handler logic. It would be great to test more, but didn't have more time for this.

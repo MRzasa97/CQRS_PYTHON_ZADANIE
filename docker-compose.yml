@@ -1,0 +1,90 @@
+version: "3"
+
+services:
+
+  redis_pubsub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: invoice-image
+    depends_on:
+      - postgres
+      - redis
+      - mailhog
+    environment:
+      - DB_HOST=postgres
+      - DB_PASSWORD=abc123
+      - REDIS_HOST=redis
+      - EMAIL_HOST=mailhog
+      - PYTHONDONTWRITEBYTECODE=1
+    volumes:
+      - ./src:/src
+      - ./tests:/tests
+    entrypoint:
+      - python
+      - /src/reportMailer/entrypoints/redis_eventconsumer.py
+    networks:
+      - invoice-network
+
+  api:
+    image: invoice-image
+    depends_on:
+      - redis_pubsub
+      - mailhog
+    environment:
+      - DB_HOST=postgres
+      - DB_PASSWORD=abc123
+      - API_HOST=api
+      - REDIS_HOST=redis
+      - EMAIL_HOST=mailhog
+      - PYTHONDONTWRITEBYTECODE=1
+      - FLASK_APP=invoice/entrypoints/flask_app.py
+      - FLASK_DEBUG=1
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./src:/src
+      - ./tests:/tests
+    entrypoint:
+      - flask
+      - run
+      - --host=0.0.0.0
+      - --port=80
+    ports:
+      - "127.0.0.1:5005:80"
+    networks:
+      - invoice-network
+
+  postgres:
+    image: postgres:9.6
+    environment:
+      - POSTGRES_USER=invoice
+      - POSTGRES_PASSWORD=abc123
+    ports:
+      - "54321:5432"
+    networks:
+      - invoice-network
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "63791:6379"
+    networks:
+      - invoice-network
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "11025:1025"
+      - "18025:8025"
+    networks:
+      - invoice-network
+
+networks:
+  invoice-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+
+  
